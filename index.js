@@ -1,4 +1,3 @@
-// index.js
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors"); // Import the CORS package
@@ -8,7 +7,11 @@ const userRoutes = require("./routes/user");
 const app = express();
 
 // [SECTION] Middlewares
-app.use(cors()); // Enable CORS for all routes
+app.use(cors({
+    origin: 'http://localhost:3000', // Allow only your frontend origin
+    methods: 'GET,PUT,PATCH,POST,DELETE',
+    credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
