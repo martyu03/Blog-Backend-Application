@@ -1,5 +1,6 @@
 // controllers/blog.js
 const Blog = require('../models/Blog');
+const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const auth = require('../auth');
 
@@ -63,22 +64,40 @@ module.exports.deleteBlog = async (req, res) => {
     }
 };
 
-module.exports.addBlogComment = async (req, res) => {
+const addBlogComment = async (req, res, next) => {
     try {
-        if (!req.body.comment) {
-            return res.status(400).json({ message: "Comment is required" });
+        const { comment } = req.body;
+
+        // Create a new comment object
+        const newComment = {
+            userId: req.user.id,   // Reference to the user ID from the JWT token
+            comment: comment,       // The comment itself
+        };
+
+        // Find the blog and push the comment
+        const blog = await Blog.findById(req.params.id);
+
+        if (!blog) {
+            return res.status(404).json({ message: 'Blog not found' });
         }
 
-        const blog = await Blog.findById(req.params.id);
-        if (!blog) return res.status(404).json({ message: "Blog not found" });
+        // Push the comment to the comments array
+        blog.comments.push(newComment);
 
-        // Push the comment into the blog post's comments array
-        blog.comments.push({ userId: req.user.id, comment: req.body.comment });
+        // Save the blog with the new comment
         await blog.save();
 
-        res.status(200).json({ message: "Comment added successfully", blog });
+        // Populate the user details (username, email) from the User model using the userId reference
+        await blog.populate({
+            path: 'comments.userId',  // Populating the userId field in comments
+            select: 'username email'  // Selecting only the username and email
+        }).execPopulate();
+
+        // Respond with the updated blog (with populated user details)
+        res.json(blog);
+
     } catch (error) {
-        res.status(500).json({ message: "Error adding comment", error: error.message });
+        next(error);
     }
 };
 

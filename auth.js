@@ -3,14 +3,13 @@ const jwt = require("jsonwebtoken");
 const secret = "BlogManagement";
 
 module.exports.createAccessToken = (user) => {
-
-	const data = {
-		id: user._id,
-		email: user.email,
-		username: user.username,
-		isAdmin: user.isAdmin
-	};
-	return jwt.sign(data, secret, {});
+    const data = {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        isAdmin: user.isAdmin
+    };
+    return jwt.sign(data, secret, {});
 }
 
 module.exports.verify = (req, res, next) => {
