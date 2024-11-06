@@ -7,11 +7,13 @@ const userRoutes = require("./routes/user");
 const app = express();
 
 // [SECTION] Middlewares
+const allowedOrigins = ['http://localhost:3000', 'https://blog-application-theta-ashen.vercel.app'];
 app.use(cors({
-    origin: 'http://localhost:3000', // Allow only your frontend origin
+    origin: allowedOrigins,
     methods: 'GET,PUT,PATCH,POST,DELETE',
     credentials: true,
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

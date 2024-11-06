@@ -19,7 +19,8 @@ module.exports.addBlog = async (req, res) => {
 
 module.exports.getAllBlogs = async (req, res) => {
     try {
-        const blogs = await Blog.find(); 
+        // Populate the author field with user's name
+        const blogs = await Blog.find().populate('author', 'name'); 
         res.status(200).json({ blogs });
     } catch (error) {
         res.status(500).json({ message: "Error retrieving blogs", error });
@@ -28,7 +29,11 @@ module.exports.getAllBlogs = async (req, res) => {
 
 module.exports.getBlogById = async (req, res) => {
     try {
-        const blog = await Blog.findById(req.params.id).populate('comments.userId', 'username'); // Populate with username
+        // Populate both author and comments with usernames
+        const blog = await Blog.findById(req.params.id)
+            .populate('author', 'name') // Populate the author's name
+            .populate('comments.userId', 'username'); // Populate with username
+
         if (!blog) return res.status(404).json({ message: "Blog not found" });
         
         res.status(200).json(blog); 
