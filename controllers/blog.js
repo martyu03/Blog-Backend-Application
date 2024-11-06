@@ -1,9 +1,9 @@
-// controllers/blog.js
 const Blog = require('../models/Blog');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const auth = require('../auth');
 
+// Add a new blog post
 module.exports.addBlog = async (req, res) => {
     try {
         const newBlog = new Blog({
@@ -18,42 +18,44 @@ module.exports.addBlog = async (req, res) => {
     }
 };
 
+// Get all blogs with author populated
 module.exports.getAllBlogs = async (req, res) => {
     try {
-        // Populate the author field with user's name
-        const blogs = await Blog.find().populate('author', 'name'); 
+        const blogs = await Blog.find().populate('author', 'username'); // Populate the author's username
         res.status(200).json({ blogs });
     } catch (error) {
         res.status(500).json({ message: "Error retrieving blogs", error });
     }
 };
 
+// Get a blog by ID with populated author and comments (with user details)
 module.exports.getBlogById = async (req, res) => {
     try {
-        // Populate both author and comments with usernames
         const blog = await Blog.findById(req.params.id)
-            .populate('author', 'name') // Populate the author's name
-            .populate('comments.userId', 'username'); // Populate with username
+            .populate('author', 'username') // Populate the author's username
+            .populate('comments.userId', 'username'); // Populate the username for each comment
 
         if (!blog) return res.status(404).json({ message: "Blog not found" });
-        
-        res.status(200).json(blog); 
+
+        res.status(200).json(blog);
     } catch (error) {
         res.status(500).json({ message: "Error retrieving blog", error });
     }
 };
 
+// Update a blog post
 module.exports.updateBlog = async (req, res) => {
     try {
         const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!updatedBlog) return res.status(404).json({ message: "Blog not found" });
-        
-        res.status(200).json(updatedBlog); 
+
+        res.status(200).json(updatedBlog);
     } catch (error) {
         res.status(400).json({ message: "Error updating blog", error });
     }
 };
 
+// Delete a blog post
 module.exports.deleteBlog = async (req, res) => {
     try {
         const deletedBlog = await Blog.findByIdAndDelete(req.params.id);
@@ -64,43 +66,40 @@ module.exports.deleteBlog = async (req, res) => {
     }
 };
 
-const addBlogComment = async (req, res, next) => {
+// Add a comment to a blog
+// In blogController.js
+exports.addBlogComment = async (req, res) => {
+    const blogId = req.params.id;
+    const { comment } = req.body;
+
     try {
-        const { comment } = req.body;
-
-        // Create a new comment object
-        const newComment = {
-            userId: req.user.id,   // Reference to the user ID from the JWT token
-            comment: comment,       // The comment itself
-        };
-
-        // Find the blog and push the comment
-        const blog = await Blog.findById(req.params.id);
-
+        // Assuming you are using a Blog model for this operation
+        const blog = await Blog.findById(blogId);
         if (!blog) {
-            return res.status(404).json({ message: 'Blog not found' });
+            return res.status(404).json({ error: "Blog not found" });
         }
 
-        // Push the comment to the comments array
-        blog.comments.push(newComment);
+        // Add the comment to the blog
+        blog.comments.push({
+            userId: req.user.id,
+            comment: comment,
+            createdAt: new Date()
+        });
 
-        // Save the blog with the new comment
         await blog.save();
 
-        // Populate the user details (username, email) from the User model using the userId reference
-        await blog.populate({
-            path: 'comments.userId',  // Populating the userId field in comments
-            select: 'username email'  // Selecting only the username and email
-        }).execPopulate();
-
-        // Respond with the updated blog (with populated user details)
-        res.json(blog);
-
+        res.json({
+            message: "Comment added successfully.",
+            post: blog
+        });
     } catch (error) {
-        next(error);
+        console.error(error);
+        res.status(500).json({ error: "Internal server error" });
     }
 };
 
+
+// Get all comments of a blog
 module.exports.getBlogComments = async (req, res) => {
     try {
         const blog = await Blog.findById(req.params.id).populate('comments.userId', 'username');
@@ -114,12 +113,13 @@ module.exports.getBlogComments = async (req, res) => {
             _id: comment._id
         }));
 
-        res.status(200).json(comments); 
+        res.status(200).json(comments);
     } catch (error) {
         res.status(500).json({ message: "Error retrieving comments", error: error.message });
     }
 };
 
+// Remove a comment from a blog
 module.exports.removeBlogComment = async (req, res) => {
     try {
         const blog = await Blog.findById(req.params.id);
