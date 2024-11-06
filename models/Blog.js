@@ -10,8 +10,12 @@ const commentSchema = new mongoose.Schema({
 const blogSchema = new mongoose.Schema({
     title: { type: String, required: true },
     content: { type: String, required: true },
-    author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    author: {
+        username: { type: String, required: true },
+        email: { type: String, required: true }
+    },
     comments: [commentSchema],
-}, { timestamps: true });
+    creationDate: { type: Date, default: Date.now },  // explicit creation date
+}, {});
 
 module.exports = mongoose.model('Blog', blogSchema);
