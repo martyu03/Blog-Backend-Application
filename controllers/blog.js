@@ -131,8 +131,8 @@ module.exports.removeBlogComment = async (req, res) => {
             return res.status(404).json({ message: "Comment not found" });
         }
 
-        // Optional: Check if the user trying to delete the comment is the one who made it
-        if (blog.comments[commentIndex].userId.toString() !== req.user.id) {
+        // Check if the user is an admin (skip user check for admins)
+        if (req.user.isAdmin === false && blog.comments[commentIndex].userId.toString() !== req.user.id) {
             return res.status(403).json({ message: "You are not authorized to delete this comment" });
         }
 
