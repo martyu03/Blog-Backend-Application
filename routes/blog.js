@@ -9,7 +9,7 @@ router.get("/getAllBlogs", verify, blogController.getAllBlogs);
 router.get("/getBlog/:id", verify, blogController.getBlogById); 
 router.get("/getComments/:id", verify, blogController.getBlogComments); 
 router.patch("/updateBlog/:id", verify, blogController.updateBlog);
-router.delete("/deleteBlog/:id", verify, verifyAdmin, blogController.deleteBlog); 
+router.delete("/deleteBlog/:id", verify, blogController.deleteBlog); 
 router.post("/addComment/:id", verify, blogController.addBlogComment); 
 router.delete("/removeComment/:id/:commentId", verify, verifyAdmin, blogController.removeBlogComment); 
 
